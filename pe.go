@@ -52,6 +52,8 @@ const (
 	ImageFileMachineAMD64     = ImageFileHeaderMachineType(0x8664) // x64
 	ImageFileMachineARM       = ImageFileHeaderMachineType(0x1c0)  // ARM little endian
 	ImageFileMachineARM64     = ImageFileHeaderMachineType(0xaa64) // ARM64 little endian
+	ImageFileMachineARM64EC   = ImageFileHeaderMachineType(0xa641) // ARM64EC (Emulation Compatible)
+	ImageFileMachineARM64X    = ImageFileHeaderMachineType(0xa64e) // ARM64X (dual-architecture)
 	ImageFileMachineARMNT     = ImageFileHeaderMachineType(0x1c4)  // ARM Thumb-2 little endian
 	ImageFileMachineEBC       = ImageFileHeaderMachineType(0xebc)  // EFI byte code
 	ImageFileMachineI386      = ImageFileHeaderMachineType(0x14c)  // Intel 386 or later processors and compatible processors

@@ -466,6 +466,8 @@ func (t ImageFileHeaderMachineType) String() string {
 		ImageFileMachineAMD64:     "x64",
 		ImageFileMachineARM:       "ARM little endian",
 		ImageFileMachineARM64:     "ARM64 little endian",
+		ImageFileMachineARM64EC:   "ARM64EC (Emulation Compatible)",
+		ImageFileMachineARM64X:    "ARM64X (dual-architecture)",
 		ImageFileMachineARMNT:     "ARM Thumb-2 little endian",
 		ImageFileMachineEBC:       "EFI byte code",
 		ImageFileMachineI386:      "Intel 386 or later / compatible processors",

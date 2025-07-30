@@ -12,6 +12,18 @@ import (
 	"github.com/saferwall/pe/log"
 )
 
+const (
+	// MaxDefaultImportEntriesCount represents the default maximum number of
+	// import entries to process to avoid running out of memory on specially
+	// crafted files.
+	MaxDefaultImportEntriesCount = 0x1000
+
+	// MaxDefaultExportEntriesCount represents the default maximum number of
+	// export entries to process to avoid running out of memory on specially
+	// crafted files.
+	MaxDefaultExportEntriesCount = 0x2000
+)
+
 // A File represents an open PE file.
 type File struct {
 	DOSHeader    ImageDOSHeader              `json:"dos_header,omitempty"`
@@ -58,6 +70,21 @@ type Options struct {
 
 	// Maximum relocations to parse, by default (MaxDefaultRelocEntriesCount).
 	MaxRelocEntriesCount uint32
+
+	// Maximum export entries to parse, by default (MaxDefaultExportEntriesCount).
+	MaxExportEntriesCount uint32
+
+	// Maximum import entries to parse, by default (MaxDefaultImportEntriesCount).
+	MaxImportEntriesCount uint32
+
+	// Validate checksums during parsing, by default (false).
+	ValidateChecksums bool
+
+	// Strict validation mode enables additional PE format checks, by default (false).
+	StrictValidation bool
+
+	// Parse debug information when available, by default (true).
+	ParseDebugInfo bool
 
 	// Disable certificate validation, by default (false).
 	DisableCertValidation bool
@@ -149,6 +176,12 @@ func NewFile(f *os.File, opts *Options) (*File, error) {
 	if file.opts.MaxRelocEntriesCount == 0 {
 		file.opts.MaxRelocEntriesCount = MaxDefaultRelocEntriesCount
 	}
+	if file.opts.MaxExportEntriesCount == 0 {
+		file.opts.MaxExportEntriesCount = MaxDefaultExportEntriesCount
+	}
+	if file.opts.MaxImportEntriesCount == 0 {
+		file.opts.MaxImportEntriesCount = MaxDefaultImportEntriesCount
+	}
 
 	var logger log.Logger
 	if file.opts.Logger == nil {
@@ -180,6 +213,12 @@ func NewBytes(data []byte, opts *Options) (*File, error) {
 	}
 	if file.opts.MaxRelocEntriesCount == 0 {
 		file.opts.MaxRelocEntriesCount = MaxDefaultRelocEntriesCount
+	}
+	if file.opts.MaxExportEntriesCount == 0 {
+		file.opts.MaxExportEntriesCount = MaxDefaultExportEntriesCount
+	}
+	if file.opts.MaxImportEntriesCount == 0 {
+		file.opts.MaxImportEntriesCount = MaxDefaultImportEntriesCount
 	}
 
 	var logger log.Logger

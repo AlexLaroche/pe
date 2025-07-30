@@ -75,6 +75,26 @@ const (
 	// ImageGuardCfLongJumpTablePresent indicates that the module contains
 	// long jmp target information.
 	ImageGuardCfLongJumpTablePresent = 0x00010000
+
+	// ImageGuardCfEHContinuationTablePresent indicates that the module
+	// contains EH continuation target information.
+	ImageGuardCfEHContinuationTablePresent = 0x00400000
+
+	// ImageGuardCfXFGEnabled indicates that the module was built with
+	// eXtended Flow Guard enabled.
+	ImageGuardCfXFGEnabled = 0x00800000
+
+	// ImageGuardRetpoline indicates that the module contains retpoline
+	// stub functions for indirect calls.
+	ImageGuardRetpoline = 0x01000000
+
+	// ImageGuardCetCompat indicates that the module is compatible with
+	// Intel Control-flow Enforcement Technology (CET).
+	ImageGuardCetCompat = 0x02000000
+
+	// ImageGuardCetCompatStrictMode indicates that the module requires
+	// strict CET compatibility mode.
+	ImageGuardCetCompatStrictMode = 0x04000000
 )
 
 const (

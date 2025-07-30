@@ -1015,3 +1015,75 @@ func TestLoadConfigDirectoryVolatileMetadata(t *testing.T) {
 		})
 	}
 }
+
+// TestGuardFlagsAnalysis validates recognition of modern Windows security flags
+func TestGuardFlagsAnalysis(t *testing.T) {
+	tests := []struct {
+		name        string
+		guardFlags  uint32
+		expected    []string
+	}{
+		{
+			name:       "Basic CFG instrumentation",
+			guardFlags: ImageGuardCfInstrumented,
+			expected:   []string{"CFG_Instrumented"},
+		},
+		{
+			name:       "CFG with function table", 
+			guardFlags: ImageGuardCfInstrumented | ImageGuardCfFunctionTablePresent,
+			expected:   []string{"CFG_Instrumented", "CFG_FunctionTable"},
+		},
+		{
+			name:       "Modern security features combined",
+			guardFlags: ImageGuardCfInstrumented | ImageGuardCfXFGEnabled | ImageGuardRetpoline | ImageGuardCetCompat,
+			expected:   []string{"CFG_Instrumented", "XFG_Enabled", "Retpoline", "CET_Compatible"},
+		},
+		{
+			name:       "Full modern protection suite",
+			guardFlags: ImageGuardCfInstrumented | ImageGuardCfXFGEnabled | ImageGuardRetpoline | ImageGuardCetCompat | ImageGuardCetCompatStrictMode | ImageGuardCfEHContinuationTablePresent,
+			expected:   []string{"CFG_Instrumented", "XFG_Enabled", "Retpoline", "CET_Compatible", "CET_StrictMode", "EH_ContinuationTable"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var detected []string
+
+			// Check for each modern security flag
+			if tt.guardFlags&ImageGuardCfInstrumented != 0 {
+				detected = append(detected, "CFG_Instrumented")
+			}
+			if tt.guardFlags&ImageGuardCfFunctionTablePresent != 0 {
+				detected = append(detected, "CFG_FunctionTable")
+			}
+			if tt.guardFlags&ImageGuardCfXFGEnabled != 0 {
+				detected = append(detected, "XFG_Enabled")
+			}
+			if tt.guardFlags&ImageGuardRetpoline != 0 {
+				detected = append(detected, "Retpoline")
+			}
+			if tt.guardFlags&ImageGuardCetCompat != 0 {
+				detected = append(detected, "CET_Compatible")
+			}
+			if tt.guardFlags&ImageGuardCetCompatStrictMode != 0 {
+				detected = append(detected, "CET_StrictMode")
+			}
+			if tt.guardFlags&ImageGuardCfEHContinuationTablePresent != 0 {
+				detected = append(detected, "EH_ContinuationTable")
+			}
+
+			if len(detected) != len(tt.expected) {
+				t.Errorf("Flag detection count mismatch for %s: got %d flags, want %d", 
+					tt.name, len(detected), len(tt.expected))
+				return
+			}
+
+			for i, expected := range tt.expected {
+				if i >= len(detected) || detected[i] != expected {
+					t.Errorf("Flag mismatch for %s at position %d: got %q, want %q", 
+						tt.name, i, detected[i], expected)
+				}
+			}
+		})
+	}
+}

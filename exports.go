@@ -10,10 +10,6 @@ import (
 	"fmt"
 )
 
-const (
-	maxExportedSymbols = 0x2000
-)
-
 var (
 	ErrExportMaxOrdEntries       = "Export directory contains more than max ordinal entries"
 	ErrExportManyRepeatedEntries = "Export directory contains many repeated entries"
@@ -228,7 +224,7 @@ func (pe *File) parseExportDirectory(rva, size uint32) error {
 				pe.Anomalies = append(pe.Anomalies, ErrExportManyRepeatedEntries)
 			}
 		}
-		if len(symbolCounts) > maxExportedSymbols {
+		if len(symbolCounts) > int(pe.opts.MaxExportEntriesCount) {
 			if !stringInSlice(ErrExportMaxOrdEntries, pe.Anomalies) {
 				pe.Anomalies = append(pe.Anomalies, ErrExportMaxOrdEntries)
 			}
@@ -297,7 +293,7 @@ func (pe *File) parseExportDirectory(rva, size uint32) error {
 				pe.Anomalies = append(pe.Anomalies, ErrExportManyRepeatedEntries)
 			}
 		}
-		if len(symbolCounts) > maxExportedSymbols {
+		if len(symbolCounts) > int(pe.opts.MaxExportEntriesCount) {
 			if !stringInSlice(ErrExportMaxOrdEntries, pe.Anomalies) {
 
 				pe.Anomalies = append(pe.Anomalies, ErrExportMaxOrdEntries)

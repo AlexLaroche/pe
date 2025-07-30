@@ -41,6 +41,9 @@ var (
 	// a name neither an ordinal, most probably malformed data.
 	AnoImportNoNameNoOrdinal = "Must have either an ordinal or a name in an import"
 
+	// ErrImportMaxDllEntries is reported when import directory contains more than max DLL entries
+	ErrImportMaxDllEntries = "Import directory contains more than max DLL entries"
+
 	// ErrDamagedImportTable is reported when the IAT and ILT table length is 0.
 	ErrDamagedImportTable = errors.New(
 		"damaged Import Table information. ILT and/or IAT appear to be broken")
@@ -143,6 +146,7 @@ type Import struct {
 
 func (pe *File) parseImportDirectory(rva, size uint32) (err error) {
 
+	i := 0
 	for {
 		importDesc := ImageImportDescriptor{}
 		fileOffset := pe.GetOffsetFromRva(rva)
@@ -152,7 +156,7 @@ func (pe *File) parseImportDirectory(rva, size uint32) (err error) {
 		// If the RVA is invalid all would blow up. Some EXEs seem to be
 		// specially nasty and have an invalid RVA.
 		if err != nil {
-			return err
+			return fmt.Errorf("parsing import descriptor at RVA 0x%x: %w", rva+uint32(i)*importDescSize, err)
 		}
 
 		// If the structure is all zeros, we reached the end of the list.
@@ -161,6 +165,7 @@ func (pe *File) parseImportDirectory(rva, size uint32) (err error) {
 		}
 
 		rva += importDescSize
+		i++
 
 		// If the array of thunks is somewhere earlier than the import
 		// descriptor we can set a maximum length for the array. Otherwise
@@ -191,6 +196,14 @@ func (pe *File) parseImportDirectory(rva, size uint32) (err error) {
 		if !IsValidDosFilename(dllName) {
 			dllName = "*invalid*"
 			continue
+		}
+
+		// Check if we've exceeded the maximum number of import entries
+		if len(pe.Imports) >= int(pe.opts.MaxImportEntriesCount) {
+			if !stringInSlice(ErrImportMaxDllEntries, pe.Anomalies) {
+				pe.Anomalies = append(pe.Anomalies, ErrImportMaxDllEntries)
+			}
+			break
 		}
 
 		pe.Imports = append(pe.Imports, Import{
