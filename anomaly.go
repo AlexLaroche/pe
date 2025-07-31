@@ -207,9 +207,6 @@ func (pe *File) GetAnomalies() error {
 		pe.Anomalies = append(pe.Anomalies, AnoNumberOfRvaAndSizes)
 	}
 
-	// Run enhanced anomaly detection
-	pe.enhancedAnomalyDetection()
-
 	return nil
 }
 
@@ -217,78 +214,5 @@ func (pe *File) GetAnomalies() error {
 func (pe *File) addAnomaly(anomaly string) {
 	if !stringInSlice(anomaly, pe.Anomalies) {
 		pe.Anomalies = append(pe.Anomalies, anomaly)
-	}
-}
-
-// Enhanced anomaly detection - call this from GetAnomalies()
-func (pe *File) enhancedAnomalyDetection() {
-	// Only run enhanced detection if section entropy is available
-	if pe.opts.SectionEntropy {
-		pe.detectPackedBinary()
-	}
-}
-
-// detectPackedBinary detects potentially packed/obfuscated binaries based on entropy and section characteristics.
-func (pe *File) detectPackedBinary() {
-	const highEntropyThreshold = 7.5
-	const veryHighEntropyThreshold = 8.0
-
-	highEntropySections := 0
-	veryHighEntropySections := 0
-	executableSections := 0
-	totalSections := len(pe.Sections)
-
-	for _, section := range pe.Sections {
-		// Check section entropy if calculated
-		if section.Entropy != nil {
-			if *section.Entropy > veryHighEntropyThreshold {
-				veryHighEntropySections++
-				pe.addAnomaly("Section " + section.String() + " has very high entropy (potential packing/encryption)")
-			} else if *section.Entropy > highEntropyThreshold {
-				highEntropySections++
-			}
-		}
-
-		// Count executable sections
-		if section.Header.Characteristics&ImageSectionMemExecute != 0 {
-			executableSections++
-		}
-
-		// Check for suspicious section names
-		sectionName := section.String()
-		if sectionName == "UPX0" || sectionName == "UPX1" || sectionName == "UPX2" {
-			pe.addAnomaly("UPX packer signature detected in section: " + sectionName)
-		}
-		if sectionName == ".pack" || sectionName == ".packed" {
-			pe.addAnomaly("Suspicious packed section name: " + sectionName)
-		}
-		if sectionName == ".themida" || sectionName == ".vmp" || sectionName == ".vmx" {
-			pe.addAnomaly("Commercial protector signature detected: " + sectionName)
-		}
-	}
-
-	// Analyze overall binary characteristics
-	if totalSections > 0 {
-		highEntropyRatio := float64(highEntropySections) / float64(totalSections)
-		if highEntropyRatio > 0.5 {
-			pe.addAnomaly("High proportion of sections with elevated entropy (potential packing)")
-		}
-
-		if executableSections == 0 && totalSections > 1 {
-			pe.addAnomaly("No executable sections found (unusual for PE files)")
-		} else if executableSections > 3 {
-			pe.addAnomaly("Unusually high number of executable sections")
-		}
-	}
-
-	// Check for suspicious import/export ratios
-	importCount := len(pe.Imports)
-	var exportCount int
-	if pe.Export.Functions != nil {
-		exportCount = len(pe.Export.Functions)
-	}
-
-	if importCount < 5 && exportCount == 0 && totalSections > 2 {
-		pe.addAnomaly("Very few imports and no exports (potential packed binary)")
 	}
 }
